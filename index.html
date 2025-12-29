@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三日棋局 · 婢女求生 (导航修复版)</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'SimSun', 'STKaiti', serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4ecd8; background-image: linear-gradient(to bottom, #f4ecd8 0%, #e8dfca 100%); min-height: 100vh; color: #3c2f1c; }
+        
+        /* 1. 标题画面样式 */
+        #titleScreen { text-align: center; padding: 100px 20px; }
+        .main-title { font-size: 3.5em; color: #5d432c; margin-bottom: 10px; letter-spacing: 8px; font-weight: bold; }
+        .start-btn { padding: 15px 50px; background: #8b7355; color: #f8f4e9; border: none; font-size: 1.2em; cursor: pointer; border-radius: 5px; transition: 0.3s; margin-top: 50px; }
+        .start-btn:hover { background: #a0522d; transform: scale(1.1); }
+
+        /* 2. 游戏界面样式 */
+        .game-status { background: #e8dfca; border: 2px solid #8b7355; border-radius: 10px; padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .stat-box { text-align: center; padding: 8px; background: #f8f4e9; border-radius: 8px; border: 1px solid #dcd3bc; }
+        .stat-label { font-size: 0.8em; color: #8b7355; font-weight: bold; }
+        .stat-value { font-size: 1.3em; font-weight: bold; color: #5d432c; }
+        .progress-container { height: 6px; background: #e0d6c2; border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .suspicion-fill { height: 100%; background: #a0522d; width: 0%; transition: width 0.5s; }
+        .network-fill { height: 100%; background: #556b2f; width: 0%; transition: width 0.5s; }
+        .scene-container { background: #f8f4e9; border: 2px solid #8b7355; border-radius: 10px; padding: 25px; min-height: 280px; }
+        .scene-text { font-size: 1.15em; white-space: pre-line; margin-bottom: 20px; line-height: 1.8; }
+        .actions-container { display: grid; gap: 10px; }
+        .action-btn { padding: 14px; background: #8b7355; color: #f8f4e9; border: 1px solid #5d432c; border-radius: 8px; cursor: pointer; text-align: left; transition: 0.2s; font-family: inherit; }
+        .action-btn:hover:not(:disabled) { background: #a0522d; padding-left: 25px; }
+        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+        .game-log { background: #e8dfca; border: 1px solid #8b7355; border-radius: 10px; padding: 12px; margin-top: 15px; height: 130px; overflow-y: auto; font-size: 0.85em; }
+
+        /* 3. 结局页按钮 */
+        .nav-btns { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .nav-btn { padding: 12px 30px; border-radius: 5px; cursor: pointer; border: none; font-size: 1em; color: white; transition: 0.2s; }
+        .btn-restart { background: #8b7355; }
+        .btn-home { background: #5d432c; }
+        .nav-btn:hover { opacity: 0.8; transform: translateY(-2px); }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="titleScreen">
+        <h1 class="main-title">三日棋局</h1>
+        <div style="font-size: 1.5em; color: #8b7355; letter-spacing: 5px;">—— 婢女求生 ——</div>
+        <button class="start-btn" onclick="startGame()">入 局</button>
+    </div>
+
+    <div id="gameContainer" class="hidden">
+        <div class="game-status">
+            <div class="stat-box">
+                <div class="stat-label">疑心 (限 90)</div>
+                <div class="stat-value" id="suspicionValue">30</div>
+                <div class="progress-container"><div class="suspicion-fill" id="suspicionBar"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">人脉 (极 9)</div>
+                <div class="stat-value" id="networkValue">1</div>
+                <div class="progress-container"><div class="network-fill" id="networkBar"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">银钱</div>
+                <div class="stat-value" style="color:#b8860b">￥<span id="goldValue">20</span></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">局势</div>
+                <div id="passiveNotice" style="color:#a0522d; font-size: 0.75em; font-weight:bold;"></div>
+            </div>
+        </div>
+        
+        <div class="scene-container">
+            <h2 id="dayDisplay" style="margin:0 0 15px 0; font-size:1.4em; color:#5d432c;"></h2>
+            <div class="scene-text" id="sceneText"></div>
+            <div class="actions-container" id="actionsContainer"></div>
+        </div>
+        <div class="game-log" id="logBox"><div id="logEntries"></div></div>
+    </div>
+
+    <div id="endingContainer" class="hidden">
+        <div style="background: #f8f4e9; padding: 40px; border: 2px solid #8b7355; border-radius: 15px; text-align: left; line-height:1.8;">
+            <h2 id="endingTitle" style="text-align:center; color:#5d432c;"></h2>
+            <div id="endingText" style="white-space: pre-line;"></div>
+            <div id="finalStats" style="margin-top:20px; border-top:1px dashed #8b7355; padding-top:10px; font-style:italic; font-size:0.9em; color:#8b7355;"></div>
+        </div>
+        <div class="nav-btns">
+            <button class="nav-btn btn-restart" onclick="startGame()">重新入局</button>
+            <button class="nav-btn btn-home" onclick="returnToTitle()">返回标题</button>
+        </div>
+    </div>
+
+    <script>
+        const initialGameState = {
+            day: 1, period: 0,
+            periods: ['清晨', '午后', '深夜'],
+            suspicion: 30, network: 1, gold: 20,
+            hasKeyItem: false, hasViceNote: false, viceBetrayed: false
+        };
+
+        let gameState = {};
+
+        const storyDatabase = {
+            '1_0': {
+                text: "【第一天·清晨】王妃叮嘱你万事小心。厨娘在走廊角落对你使了个眼色。",
+                actions: [
+                    { text: "【隐忍】专心扫地，避开厨娘眼光", effect: () => { gameState.suspicion -= 15; addLog("你表现得卑微无知。"); } },
+                    { text: "【贿赂】塞给厨娘5两银子打探情报", cost: 5, effect: () => { gameState.network += 2; gameState.suspicion += 8; gameState.gold -= 5; addLog("厨娘告诉你，她弟弟在守城门。"); } }
+                ]
+            },
+            '1_1': {
+                text: "【第一天·午后】将军独自在凉亭。石桌上放着一袋沉甸甸的赏银。",
+                actions: [
+                    { text: "【奉茶】恭敬奉茶，消减将军疑心", effect: () => { gameState.suspicion -= 12; addLog("将军被你的‘勤快’打动。"); } },
+                    { text: "【窃财】富贵险中求，偷取15两军饷", effect: () => { gameState.gold += 15; gameState.suspicion += 15; addLog("你偷到了钱，但搜查变严了。"); } }
+                ]
+            },
+            '1_2': {
+                text: "【第一天·深夜】王妃交给你一枚联络旧部的信物玉佩。",
+                actions: [
+                    { text: "【稳健】今晚不出门，防止暴露", effect: () => { gameState.suspicion -= 5; addLog("风平浪静的一夜。"); } },
+                    { text: "【冒险】重金雇更夫送信联络赵校尉", cost: 10, effect: () => { gameState.network += 3; gameState.gold -= 10; gameState.hasKeyItem = true; gameState.suspicion += 10; addLog("信送到了。"); } }
+                ]
+            },
+            '2_0': {
+                text: "【第二天·清晨】卫兵正在寝宫外搜查不明财物。",
+                actions: [
+                    { text: "【上交】主动交出5两银子“充公”", cost: 5, effect: () => { gameState.gold -= 5; gameState.suspicion -= 20; addLog("你表现得很配合。"); } },
+                    { text: "【打点】贿赂搜查校尉8两银子", cost: 8, effect: () => { gameState.network += 2; gameState.gold -= 8; gameState.suspicion += 5; addLog("校尉给你行了方便。"); } },
+                    { text: "【装傻】声称身无分文", effect: () => { gameState.suspicion += 10; addLog("卫兵翻了你的箱子，面露不善。"); } }
+                ]
+            },
+            '2_1': {
+                text: "【第二天·午后】副将在走廊拦住你。他似乎在等你的价码。",
+                actions: [
+                    { text: "【游说】用大义暗示王爷封赏 (需人脉4)", requires: () => gameState.network >= 4, effect: () => { gameState.hasViceNote = true; addLog("副将被你说动。"); } },
+                    { text: "【砸钱】直接奉上15两银子作为定金", cost: 15, effect: () => { gameState.network += 4; gameState.gold -= 15; gameState.hasViceNote = true; addLog("副将看到真金大喜。"); } },
+                    { text: "【回避】快步离开", effect: () => { gameState.suspicion += 15; addLog("副将冷笑一声。"); } }
+                ]
+            },
+            '2_2_normal': {
+                text: "【第二天·深夜】风雨欲来。没有联络人的你，只能闭门祈祷。",
+                actions: [{ text: "【忍耐】闭目养神", effect: () => { gameState.suspicion -= 8; addLog("沉默是最好的掩护。"); } }]
+            },
+            '2_2_vice': {
+                text: "【第二天·深夜】副将在角门索要打通城门的费用。",
+                actions: [
+                    { text: "【血本】掏出10两银子买通守军", cost: 10, effect: () => { gameState.network += 5; gameState.viceBetrayed = true; gameState.suspicion += 10; addLog("副将承诺城门必开。"); } },
+                    { text: "【空口】囊中羞涩，立下欠条", effect: () => { gameState.network += 2; gameState.suspicion += 25; addLog("副将虽不满，但贪念让他再帮你一次。"); } }
+                ]
+            },
+            '3_0': {
+                text: "【第三天·清晨】将军在大院集结。卫兵已经拔出了长刀。",
+                actions: [
+                    { text: "【祈福】跪在马前为将军祈福", effect: () => { gameState.suspicion -= 25; addLog("你的表演消解了危险。"); } },
+                    { text: "【博弈】买通马夫传出最后密信", cost: 5, effect: () => { gameState.gold -= 5; gameState.network += 2; gameState.suspicion += 12; addLog("情报出去了。"); } }
+                ]
+            },
+            '3_1': {
+                text: "【第三天·午后】信号火光需要升起！",
+                actions: [
+                    { text: "【举火】点燃信号", effect: () => { 
+                        gameState.suspicion += gameState.viceBetrayed ? 10 : 30;
+                        addLog("火焰升起！"); 
+                    } }
+                ]
+            },
+            '3_2': {
+                text: "【第三天·深夜】门开了...",
+                actions: [{ text: "查看结果", effect: () => {} }]
+            }
+        };
+
+        function startGame() {
+            gameState = JSON.parse(JSON.stringify(initialGameState));
+            document.getElementById('titleScreen').classList.add('hidden');
+            document.getElementById('endingContainer').classList.add('hidden');
+            document.getElementById('gameContainer').classList.remove('hidden');
+            document.getElementById('logEntries').innerHTML = "";
+            loadScene();
+        }
+
+        function returnToTitle() {
+            document.getElementById('endingContainer').classList.add('hidden');
+            document.getElementById('titleScreen').classList.remove('hidden');
+        }
+
+        function updateDisplay() {
+            gameState.suspicion = Math.max(0, Math.min(100, gameState.suspicion));
+            gameState.network = Math.max(0, Math.min(10, gameState.network));
+            document.getElementById('suspicionValue').textContent = gameState.suspicion;
+            document.getElementById('networkValue').textContent = gameState.network;
+            document.getElementById('goldValue').textContent = gameState.gold;
+            document.getElementById('suspicionBar').style.width = gameState.suspicion + '%';
+            document.getElementById('networkBar').style.width = (gameState.network * 10) + '%';
+            const growth = gameState.day === 1 ? 2 : (gameState.day === 2 ? 3 : 4);
+            document.getElementById('passiveNotice').textContent = gameState.day <= 3 ? `自增 +${growth}` : "";
+        }
+
+        function addLog(msg) {
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.textContent = `[记录] ${msg}`;
+            document.getElementById('logEntries').prepend(div);
+        }
+
+        function loadScene() {
+            if (gameState.day > 3) { showEnding(); return; }
+            let key = `${gameState.day}_${gameState.period}`;
+            let scene = (key === '2_2' && gameState.hasViceNote) ? storyDatabase['2_2_vice'] : storyDatabase[key];
+            if(!scene) scene = storyDatabase['2_2_normal'];
+
+            document.getElementById('sceneText').textContent = scene.text;
+            document.getElementById('dayDisplay').textContent = `第${gameState.day}天 · ${gameState.periods[gameState.period]}`;
+            const container = document.getElementById('actionsContainer');
+            container.innerHTML = '';
+
+            scene.actions.forEach(act => {
+                const btn = document.createElement('button');
+                btn.className = 'action-btn';
+                let moneyOK = (act.cost || 0) <= gameState.gold;
+                let reqOK = act.requires ? act.requires() : true;
+                btn.innerHTML = act.text + (act.cost ? ` (需￥${act.cost})` : "");
+                btn.disabled = !(moneyOK && reqOK);
+                btn.onclick = () => { act.effect(); nextPeriod(); };
+                container.appendChild(btn);
+            });
+            updateDisplay();
+        }
+
+        function nextPeriod() {
+            const growth = gameState.day === 1 ? 2 : (gameState.day === 2 ? 3 : 4);
+            gameState.suspicion += growth;
+            gameState.period++;
+            if (gameState.period >= 3) { gameState.period = 0; gameState.day++; }
+            loadScene();
+        }
+
+        function showEnding() {
+            document.getElementById('gameContainer').classList.add('hidden');
+            document.getElementById('endingContainer').classList.remove('hidden');
+            let title = "", text = "";
+            if (gameState.suspicion >= 90) { title = "【殒 · 功败垂成】"; text = "你暴露了。"; }
+            else if (gameState.network >= 8 && gameState.suspicion <= 75) { title = "【胜 · 暗流之主】"; text = "你赢了！"; }
+            else { title = "【存 · 乱世余生】"; text = "平凡的结局。"; }
+            document.getElementById('endingTitle').textContent = title;
+            document.getElementById('endingText').textContent = text;
+            document.getElementById('finalStats').textContent = `结局数据 —— 疑心：${gameState.suspicion} | 人脉：${gameState.network} | 剩金：${gameState.gold}`;
+        }
+    </script>
+</body>
+</html>
