@@ -3,270 +3,1063 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三日棋局 · 婢女求生</title>
+    <title>三日棋局·孤影</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'SimSun', 'STKaiti', serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4ecd8; background-image: linear-gradient(to bottom, #f4ecd8 0%, #e8dfca 100%); min-height: 100vh; color: #3c2f1c; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'SimSun', 'STKaiti', serif; 
+            background: linear-gradient(to bottom, #f4ecd8 0%, #e8dfca 100%); 
+            min-height: 100vh; 
+            color: #3c2f1c; 
+            padding: 20px;
+        }
         
-        /* 全屏界面通用 */
-        .full-screen { text-align: center; padding: 60px 20px; }
-        .main-title { font-size: 3.5em; color: #5d432c; margin-bottom: 10px; letter-spacing: 12px; font-weight: bold; }
-        .btn-large { padding: 15px 50px; background: #8b7355; color: #f8f4e9; border: none; font-size: 1.2em; cursor: pointer; border-radius: 5px; transition: 0.3s; margin: 15px; font-family: inherit; }
-        .btn-large:hover { background: #a0522d; transform: scale(1.02); }
-
-        /* 状态栏 */
-        .game-status { background: #e8dfca; border: 2px solid #8b7355; border-radius: 10px; padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .stat-box { text-align: center; padding: 8px; background: #f8f4e9; border-radius: 8px; border: 1px solid #dcd3bc; }
-        .stat-label { font-size: 0.8em; color: #8b7355; font-weight: bold; }
-        .stat-value { font-size: 1.3em; font-weight: bold; color: #5d432c; }
-        .progress-container { height: 6px; background: #e0d6c2; border-radius: 3px; margin-top: 5px; overflow: hidden; }
-        .suspicion-fill { height: 100%; background: #a0522d; width: 0%; transition: width 0.5s; }
-        .network-fill { height: 100%; background: #556b2f; width: 0%; transition: width 0.5s; }
-
-        /* 场景展示区 */
-        .scene-container { background: #f8f4e9; border: 2px solid #8b7355; border-radius: 10px; padding: 30px; min-height: 300px; }
-        .scene-text { font-size: 1.2em; white-space: pre-line; margin-bottom: 25px; line-height: 2; text-align: left; }
-        .actions-container { display: grid; gap: 12px; }
-        .action-btn { padding: 16px; background: #8b7355; color: #f8f4e9; border: 1px solid #5d432c; border-radius: 8px; cursor: pointer; text-align: left; font-family: inherit; font-size: 1em; }
-        .action-btn:hover:not(:disabled) { background: #a0522d; padding-left: 20px; }
-        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: line-through; }
-
-        .game-log { background: #e8dfca; border: 1px solid #8b7355; border-radius: 10px; padding: 12px; margin-top: 15px; height: 120px; overflow-y: auto; font-size: 0.9em; text-align: left; }
-        .hidden { display: none; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .screen { display: none; text-align: center; padding: 60px 20px; }
+        .screen.active { display: block; }
+        .main-title { font-size: 3.5em; color: #5d432c; margin-bottom: 20px; letter-spacing: 12px; font-weight: bold; }
+        .subtitle { font-size: 1.5em; color: #8b7355; letter-spacing: 5px; margin-bottom: 40px; }
+        
+        .btn { padding: 15px 50px; background: #8b7355; color: #f8f4e9; border: none; font-size: 1.2em; cursor: pointer; border-radius: 5px; margin: 10px; font-family: inherit; transition: 0.3s; }
+        .btn:hover { background: #a0522d; transform: scale(1.05); }
+        
+        .status-bar { background: #e8dfca; border: 2px solid #8b7355; border-radius: 10px; padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .stat-box { text-align: center; padding: 10px; background: #f8f4e9; border-radius: 8px; border: 1px solid #dcd3bc; }
+        .stat-label { font-size: 0.85em; color: #8b7355; font-weight: bold; margin-bottom: 5px; }
+        .stat-value { font-size: 1.4em; font-weight: bold; color: #5d432c; }
+        .stat-bar { height: 6px; background: #e0d6c2; border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .stat-fill { height: 100%; transition: width 0.5s; }
+        .suspicion-fill { background: #a0522d; }
+        .network-fill { background: #556b2f; }
+        .trust-fill { background: #8b0000; }
+        
+        .game-scene { background: #f8f4e9; border: 2px solid #8b7355; border-radius: 10px; padding: 30px; min-height: 400px; }
+        .scene-title { font-size: 1.4em; color: #5d432c; margin-bottom: 20px; font-weight: bold; }
+        .scene-text { font-size: 1.15em; line-height: 2; margin-bottom: 30px; white-space: pre-line; }
+        
+        .actions { display: grid; gap: 12px; }
+        .action-btn { padding: 18px; background: #8b7355; color: #f8f4e9; border: 1px solid #5d432c; border-radius: 8px; cursor: pointer; text-align: left; font-family: inherit; font-size: 1.05em; transition: 0.3s; }
+        .action-btn:hover:not(:disabled) { background: #a0522d; padding-left: 25px; }
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; text-decoration: line-through; }
+        
+        .feedback-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .feedback-overlay.active { display: flex; }
+        .feedback-box { background: #f8f4e9; border: 3px solid #8b7355; border-radius: 15px; padding: 40px; max-width: 600px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .feedback-title { font-size: 1.2em; color: #8b7355; margin-bottom: 20px; text-align: center; border-bottom: 1px dashed #8b7355; padding-bottom: 10px; }
+        .feedback-text { font-size: 1.15em; line-height: 2; margin-bottom: 20px; white-space: pre-line; }
+        .feedback-changes { background: #e8dfca; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95em; text-align: center; }
+        
+        .chronicle { background: #e8dfca; border: 2px solid #8b7355; border-radius: 10px; padding: 15px; margin-top: 20px; max-height: 200px; overflow-y: auto; }
+        .chronicle-title { font-size: 1em; color: #8b7355; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #8b7355; padding-bottom: 5px; }
+        .chronicle-entry { padding: 8px 0; border-bottom: 1px dashed #c0b8a8; font-size: 0.9em; line-height: 1.6; }
+        
+        .ending-content { max-width: 700px; margin: 0 auto; background: #f8f4e9; padding: 40px; border: 3px solid #8b7355; border-radius: 15px; }
+        .ending-title { font-size: 2em; color: #5d432c; text-align: center; margin-bottom: 30px; letter-spacing: 5px; }
+        .ending-text { font-size: 1.15em; line-height: 2.2; white-space: pre-line; margin-bottom: 20px; }
+        .ending-stats { margin-top: 30px; border-top: 2px dashed #8b7355; padding-top: 20px; font-size: 0.95em; color: #8b7355; text-align: center; font-style: italic; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div id="titleScreen" class="screen active">
+            <h1 class="main-title">三日棋局</h1>
+            <div class="subtitle">孤 影 谋 生</div>
+            <button class="btn" onclick="showPrologue()">入 局</button>
+        </div>
 
-    <div id="titleScreen" class="full-screen">
-        <h1 class="main-title">三日棋局</h1>
-        <div style="font-size: 1.5em; color: #8b7355; letter-spacing: 5px;">孤 影 谋 生</div>
-        <button class="btn-large" onclick="showPrologue()">入 局</button>
+        <div id="prologueScreen" class="screen">
+            <div class="ending-content" style="text-align: left;">
+                <p style="line-height: 2.2; font-size: 1.15em;">
+                    深秋锁城，叛将倒戈。三日后援军方抵，而王府已成孤岛。
+                    <br><br>
+                    你是王妃座前一名卑微婢女，亦是这死局中最后的一枚暗棋。
+                    <br><br>
+                    叛将生性多疑，随着局势逼近，戒心更胜往昔。若让那疑虑越过雷池，黎明之前，便是魂断之时。
+                    <br><br>
+                    乱世如棋，胜负仅在毫厘。每一步抉择，皆是生死惊变。
+                </p>
+            </div>
+            <button class="btn" onclick="startGame()">明 白</button>
+        </div>
+
+        <div id="gameScreen" class="screen">
+            <div class="status-bar">
+                <div class="stat-box">
+                    <div class="stat-label">叛将疑心 (限90)</div>
+                    <div class="stat-value" id="suspicionValue">30</div>
+                    <div class="stat-bar"><div class="stat-fill suspicion-fill" id="suspicionBar"></div></div>
+                </div>
+                <div class="stat-box" id="secondStatBox">
+                    <div class="stat-label">暗流人脉</div>
+                    <div class="stat-value" id="secondValue">-</div>
+                    <div class="stat-bar"><div class="stat-fill network-fill" id="secondBar"></div></div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">随身银钱</div>
+                    <div class="stat-value" style="color:#b8860b">￥<span id="goldValue">20</span></div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">身份</div>
+                    <div class="stat-value" id="identityValue" style="font-size:1.1em;">未定</div>
+                </div>
+            </div>
+
+            <div class="game-scene">
+                <div class="scene-title" id="sceneTitle"></div>
+                <div class="scene-text" id="sceneText"></div>
+                <div class="actions" id="actionsContainer"></div>
+            </div>
+
+            <div class="chronicle">
+                <div class="chronicle-title">📜 案卷记录</div>
+                <div id="chronicleEntries"></div>
+            </div>
+        </div>
+
+        <div id="endingScreen" class="screen">
+            <div class="ending-content">
+                <h2 class="ending-title" id="endingTitle"></h2>
+                <div class="ending-text" id="endingText"></div>
+                <div class="ending-stats" id="endingStats"></div>
+            </div>
+            <button class="btn" onclick="startGame()">再 弈 一 局</button>
+            <button class="btn" style="background:#5d432c" onclick="backToTitle()">返 回 标 题</button>
+        </div>
     </div>
 
-    <div id="prologueScreen" class="full-screen hidden">
-        <div style="max-width: 600px; margin: 0 auto; background: #f8f4e9; padding: 40px; border: 2px solid #8b7355; border-radius: 15px; text-align: left; line-height: 2.2; font-size: 1.15em;">
-            深秋锁城，将军反戈。三日后援军方抵，而王府已成孤岛。
-            你是王妃座前一名卑微婢女，亦是这死局中最后的一枚暗棋。
-            <br><br>
-            将军生性多疑，随着局势逼近，戒心更胜往昔。若让那疑虑越过九十分的雷池，黎明之前，便是魂断之时。
-            <br><br>
-            乱世如棋，胜负仅在毫厘。每一步抉择，皆是生死之辩。
-        </div>
-        <button class="btn-large" onclick="startGame()">明 白</button>
-    </div>
-
-    <div id="gameContainer" class="hidden">
-        <div class="game-status">
-            <div class="stat-box">
-                <div class="stat-label">将军疑心 (限 90)</div>
-                <div class="stat-value" id="suspicionValue">30</div>
-                <div class="progress-container"><div class="suspicion-fill" id="suspicionBar"></div></div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">暗流人脉 (极 9)</div>
-                <div class="stat-value" id="networkValue">1</div>
-                <div class="progress-container"><div class="network-fill" id="networkBar"></div></div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">随身银钱</div>
-                <div class="stat-value" style="color:#b8860b">￥<span id="goldValue">20</span></div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">局势</div>
-                <div id="passiveNotice" style="color:#a0522d; font-size: 0.8em; font-weight:bold;"></div>
-            </div>
-        </div>
-        
-        <div class="scene-container">
-            <h2 id="dayDisplay" style="margin:0 0 15px 0; color:#5d432c; font-size:1.4em;"></h2>
-            <div class="scene-text" id="sceneText"></div>
-            <div class="actions-container" id="actionsContainer"></div>
-        </div>
-        <div class="game-log" id="logEntries"></div>
-    </div>
-
-    <div id="endingContainer" class="hidden full-screen">
-        <div style="max-width: 700px; margin: 0 auto; background: #f8f4e9; padding: 40px; border: 2px solid #8b7355; border-radius: 15px; text-align: left;">
-            <h2 id="endingTitle" style="text-align:center; color:#5d432c;"></h2>
-            <div id="endingText" style="white-space: pre-line; line-height:2.2; font-size: 1.1em;"></div>
-            <div id="finalStats" style="margin-top:20px; border-top:1px dashed #8b7355; padding-top:15px; font-size:0.95em; color:#8b7355; font-style: italic; text-align: center;"></div>
-        </div>
-        <div style="margin-top: 20px;">
-            <button class="btn-large" onclick="startGame()">再 弈 一 局</button>
-            <button class="btn-large" style="background:#5d432c" onclick="returnToTitle()">返 回 标 题</button>
+    <div class="feedback-overlay" id="feedbackOverlay">
+        <div class="feedback-box">
+            <div class="feedback-title" id="feedbackTitle"></div>
+            <div class="feedback-text" id="feedbackText"></div>
+            <div class="feedback-changes" id="feedbackChanges"></div>
+            <button class="btn" onclick="closeFeedback()" style="width:100%">确 认</button>
         </div>
     </div>
 
     <script>
-        const initialGameState = {
-            day: 1, period: 0,
-            periods: ['清晨', '午后', '深夜'],
-            suspicion: 30, network: 1, gold: 20,
-            hasKeyItem: false, hasViceNote: false, viceBetrayed: false
-        };
+const initialState = {
+    day: 1,
+    period: 0, // 0:清晨, 1:午后, 2:深夜
+    identity: null, // null, "loyal", "traitor"
+    suspicion: 30,
+    network: 1,
+    trust: 0,
+    gold: 20,
+    flags: {
+        princessDead: false,
+        generalDead: false,
+        hasWeapon: null, // null, "poison", "blade"
+        sentLetter: false,
+        hasToken: false, // 王妃信物
+        hasAid: false,   // 内应助攻
+        betrayed: false  // 指认过暗哨
+    }
+};
+let gameState = {};
+let pendingChanges = {};
 
-        let gameState = {};
-
-        const storyDatabase = {
-            '1_0': {
-                text: "【第一天 · 清晨】王妃叮嘱你万事小心。厨娘在走廊角落对你使了个眼色，似乎想低语什么。",
-                actions: [
-                    { text: "【隐忍】专心洒扫，避开厨娘视线", effect: () => { gameState.suspicion -= 15; addLog("你表现得卑微无知。"); } },
-                    { text: "【探听】塞给厨娘五两银子打探情报", cost: 5, effect: () => { gameState.network += 2; gameState.suspicion += 8; gameState.gold -= 5; addLog("厨娘告诉你，她弟弟在守城门。"); } }
-                ]
+// ============ 游戏数据库：三日完整场景库 ============
+const sceneDatabase = {
+    // ==================== DAY 1 ====================
+    "D1_0_null": {
+        text: "深秋锁城，寒意已透骨。王妃独坐镜前，一夜之间华发暗生。她望向你，这深宫里最后一张熟悉的面孔。",
+        actions: [
+            {
+                text: "【洒扫】如常侍奉，静观其变",
+                effect: (gs) => {
+                    gs.identity = "loyal";
+                    gs.suspicion = Math.max(0, gs.suspicion - 5);
+                    gs.network += 1;
+                    recordChange("身份", "忠诚");
+                    recordChange("疑心", -5);
+                    recordChange("人脉", 1);
+                },
+                feedback: "你低眉顺眼，擦拭着本就光洁的案几。叛将的亲兵从门前经过，目光如鹰扫过，未作停留。此刻的平凡，是最好的伪装。"
             },
-            '1_1': {
-                text: "【第一天 · 午后】将军独自在凉亭。石桌上放着军饷钱袋。他正闭目养神，并未察觉你的到来。",
-                actions: [
-                    { text: "【奉茶】毕恭毕敬上前，消减其怀疑", effect: () => { gameState.suspicion -= 12; addLog("将军被你的‘勤快’暂时蒙蔽。"); } },
-                    { text: "【窃财】富贵险中求，偷取十五两银钱", effect: () => { gameState.gold += 15; gameState.suspicion += 15; addLog("你得手了，但搜查变严。"); } }
-                ]
+			{
+                text: "【安抚】递上一杯热茶，稳住王妃心神",
+                effect: (gs) => { gs.identity = "loyal"; gs.network += 2; recordChange("人脉", 2); },
+                feedback: "王妃接过茶杯，指尖冰凉。她低声说：‘若是城破，你便自己逃吧。’你心中一酸，这情分或许日后能救命。"
             },
-            '1_2': {
-                text: "【第一天 · 深夜】王妃交给你一枚联络旧部的玉佩，问你是否敢趁夜送信出府。",
-                actions: [
-                    { text: "【潜伏】今晚不出门，防止暴露行踪", effect: () => { gameState.suspicion -= 8; addLog("一夜平安。"); } },
-                    { text: "【联络】重金雇更夫送密信出府", cost: 10, effect: () => { gameState.network += 3; gameState.gold -= 10; gameState.hasKeyItem = true; gameState.suspicion += 10; addLog("信已送至校尉手中。"); } }
-                ]
+            {
+                text: "【贿赂】将五两银子塞给门前的传信兵",
+                requires: (gs) => gs.gold >= 5,
+                effect: (gs) => { gs.identity = "loyal"; gs.gold -= 5; gs.network += 3; gs.suspicion += 5; recordChange("银钱", -5); recordChange("人脉", 3); recordChange("疑心", 5); },
+                feedback: "小兵收下银子，吐出一句：‘援军最快也要三日，你主子怕是等不到了。’这情报，重若千金。"
             },
-            '2_0': {
-                text: "【第二天 · 清晨】卫兵正在寝宫外搜查仆从财物。若表现得过于惊慌，恐有不测。",
-                actions: [
-                    { text: "【配合】交出五两碎银洗清嫌疑", cost: 5, effect: () => { gameState.gold -= 5; gameState.suspicion -= 20; addLog("你表现得很配合。"); } },
-                    { text: "【打点】贿赂搜查校尉换取情报", cost: 8, effect: () => { gameState.network += 2; gameState.gold -= 8; gameState.suspicion += 5; addLog("校尉给你行了方便。"); } }
-                ]
+           {
+    text: "【投诚】弃主求生（需通关一次解锁）",
+    // 门槛：钱足够(20) 或者 通关过一次
+    requires: (gs) => localStorage.getItem('gameCleared') === 'true',
+    	effect: (gs) => { gs.identity = "traitor"; gs.suspicion += 10; recordChange("身份", "野心"); recordChange("疑心", 10); },
+    feedback: "你走向偏厅。叛将横刀而问：“奴婢也配求生？”你直视他：“将军要城，我要权。”"
+}        ]
+    },
+    "D1_1_loyal": {
+        text: "厨房的管事嬷嬷悄悄拉住你，塞给你半块馊了的饼。“姑娘，省着点。”她的儿子在城门守军之中，眼里有和你一样的恐惧。",
+        actions: [
+            {
+                text: "【结交】接过饼，低声探问府外消息",
+                effect: (gs) => {
+                    gs.network += 2;
+                    gs.suspicion += 2;
+                    recordChange("人脉", 2);
+                    recordChange("疑心", 2);
+                },
+                feedback: "嬷嬷摇头，只指了指西边柴房的方向。那里，或许有通往外界的缝隙。你记下了这份人情。"
             },
-            '2_1': {
-                text: "【第二天 · 午后】副将在走廊拦住你，言语间似在左右摇摆。他在看你的诚意。",
-                actions: [
-                    { text: "【游说】用大义暗示王爷的封赏 (需人脉4)", requires: () => gameState.network >= 4, effect: () => { gameState.hasViceNote = true; addLog("副将被你说动。"); } },
-                    { text: "【砸钱】直接奉上十五两银子定金", cost: 15, effect: () => { gameState.network += 4; gameState.gold -= 15; gameState.hasViceNote = true; addLog("副将大喜。"); } },
-                    { text: "【退避】快步离去，不做纠缠", effect: () => { gameState.suspicion += 15; addLog("副将盯着你的背影，面露凶色。"); } }
-                ]
-            },
-            '2_2_vice': {
-                text: "【第二天 · 深夜】副将在角门等候，他需要钱去买通守门亲兵。这是最后的博弈。",
-                actions: [
-                    { text: "【血本】掏出十两银子买通守军", cost: 10, effect: () => { gameState.network += 5; gameState.viceBetrayed = true; gameState.suspicion += 10; addLog("万事俱备。"); } },
-                    { text: "【周旋】由于银两不足，只能立下字据承诺重金", effect: () => { gameState.network += 2; gameState.suspicion += 25; addLog("副将虽不满，但贪念让他决定再帮你一次。"); } }
-                ]
-            },
-            '3_0': {
-                text: "【第三天 · 清晨】将军集结部队，准备迎接最后一刻。卫兵已盯上了王妃的院落。",
-                actions: [
-                    { text: "【苦肉】在马前跪地祈福，极力表忠", effect: () => { gameState.suspicion -= 25; addLog("将军被你的精湛表演迷惑。"); } },
-                    { text: "【死谏】拦路劝阻将军莫要一错再错", effect: () => { gameState.network += 3; gameState.suspicion += 20; addLog("将军大怒。"); } }
-                ]
-            },
-            '3_1': {
-                text: "【第三天 · 午后】信号烟火必须按时燃起。马厩就在前方。",
-                actions: [
-                    { text: "【纵火】点燃祠堂作为起事信号", effect: () => { 
-                        gameState.suspicion += gameState.viceBetrayed ? 10 : 30;
-                        addLog("火焰腾空！"); 
-                    } }
-                ]
-            },
-            '3_2': {
-                text: "【第三天 · 深夜】厮杀声停息了。门被猛地推开……",
-                actions: [{ text: "【终局】查看最终归宿", effect: () => {} }]
+            {
+                text: "【蛰伏】摇头拒绝，默默离开",
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 2);
+                    recordChange("疑心", -2);
+                },
+                feedback: "你不知道这是试探还是真心。在这囚笼里，信任比黄金更奢侈。你选择不吃来历不明的食物。"
             }
-        };
-
-        function showPrologue() {
-            document.getElementById('titleScreen').classList.add('hidden');
-            document.getElementById('prologueScreen').classList.remove('hidden');
-        }
-
-        function startGame() {
-            // 重置状态
-            gameState = JSON.parse(JSON.stringify(initialGameState));
-            // 切换界面
-            document.getElementById('titleScreen').classList.add('hidden');
-            document.getElementById('prologueScreen').classList.add('hidden');
-            document.getElementById('endingContainer').classList.add('hidden');
-            document.getElementById('gameContainer').classList.remove('hidden');
-            // 清理日志
-            document.getElementById('logEntries').innerHTML = "";
-            loadScene();
-        }
-
-        function returnToTitle() {
-            document.getElementById('endingContainer').classList.add('hidden');
-            document.getElementById('gameContainer').classList.add('hidden');
-            document.getElementById('titleScreen').classList.remove('hidden');
-        }
-
-        function updateDisplay() {
-            gameState.suspicion = Math.max(0, Math.min(100, gameState.suspicion));
-            gameState.network = Math.max(0, Math.min(10, gameState.network));
-            document.getElementById('dayDisplay').textContent = `第${gameState.day}天 · ${gameState.periods[gameState.period]}`;
-            document.getElementById('suspicionValue').textContent = gameState.suspicion;
-            document.getElementById('networkValue').textContent = gameState.network;
-            document.getElementById('goldValue').textContent = gameState.gold;
-            document.getElementById('suspicionBar').style.width = gameState.suspicion + '%';
-            document.getElementById('networkBar').style.width = (gameState.network * 10) + '%';
-            const growth = gameState.day === 1 ? 2 : (gameState.day === 2 ? 3 : 4);
-            document.getElementById('passiveNotice').textContent = gameState.day <= 3 ? `疑心上涨 +${growth}` : "";
-        }
-
-        function addLog(msg) {
-            const div = document.createElement('div');
-            div.style.padding = "4px 0";
-            div.style.borderBottom = "1px dashed #c0b8a8";
-            div.textContent = `[记录] ${msg}`;
-            document.getElementById('logEntries').prepend(div);
-        }
-
-        function loadScene() {
-            if (gameState.day > 3) { showEnding(); return; }
-            let key = `${gameState.day}_${gameState.period}`;
-            let scene = (key === '2_2' && gameState.hasViceNote) ? storyDatabase['2_2_vice'] : storyDatabase[key];
-            if(!scene) scene = storyDatabase['2_2_normal'] || {text:"夜深了。", actions:[]};
-
-            document.getElementById('sceneText').textContent = scene.text;
-            const container = document.getElementById('actionsContainer');
-            container.innerHTML = '';
-
-            scene.actions.forEach(act => {
-                const btn = document.createElement('button');
-                btn.className = 'action-btn';
-                let moneyOK = (act.cost || 0) <= gameState.gold;
-                let reqOK = act.requires ? act.requires() : true;
-                btn.innerHTML = act.text + (act.cost ? ` (需￥${act.cost})` : "");
-                btn.disabled = !(moneyOK && reqOK);
-                btn.onclick = () => { act.effect(); nextPeriod(); };
-                container.appendChild(btn);
-            });
-            updateDisplay();
-        }
-
-        function nextPeriod() {
-            const growth = gameState.day === 1 ? 2 : (gameState.day === 2 ? 3 : 4);
-            gameState.suspicion += growth;
-            gameState.period++;
-            if (gameState.period >= 3) { gameState.period = 0; gameState.day++; }
-            loadScene();
-        }
-
-        function showEnding() {
-            document.getElementById('gameContainer').classList.add('hidden');
-            document.getElementById('endingContainer').classList.remove('hidden');
-            let title = "", text = "";
-            if (gameState.suspicion >= 90) {
-                title = "【殒 · 功败垂成】";
-                text = "将军的亲卫先一步推开了门。你在黎明前被害。";
-            } else if (gameState.network >= 8 && gameState.suspicion <= 70) {
-                title = "【胜 · 暗流之主】";
-                text = "大军入城，副将倒戈！你赢得了这场三日豪赌，从此主宰了自己的命运。";
-            } else {
-                title = "【存 · 乱世余生】";
-                text = "你带着王妃逃走了。虽无名利，但生命已是最好的赏赐。";
+        ]
+    },
+    "D1_1_traitor": {
+        text: "叛将扔给你一本破烂的名册。“认得字么？把王妃陪嫁过来的、宫里赏赐的，所有下人的名字，给我圈出来。”",
+        actions: [
+            {
+                text: "【指认】迅速圈出几个可能的忠仆",
+                effect: (gs) => {
+                    gs.trust += 5;
+                    gs.network = Math.max(0, gs.network - 3);
+                    gs.flags.betrayed = true;
+                    recordChange("信任", 5);
+                    recordChange("人脉", -3);
+                },
+                feedback: "“很好。”他唤来亲兵，低语几句。黄昏时分，那几个名字的主人便从府中消失了。你感到一阵冰冷的战栗，也感到一丝扭曲的安心。"
+            },
+            {
+                text: "【隐瞒】佯装不识，称自己人微言轻",
+                effect: (gs) => {
+                    gs.suspicion += 8;
+                    recordChange("疑心", 8);
+                },
+                feedback: "“废物。”名册砸在你脸上。你知道，自己错过了一次递投名状的机会，但也暂时远离了血泊。"
             }
-            document.getElementById('endingTitle').textContent = title;
-            document.getElementById('endingText').textContent = text;
-            document.getElementById('finalStats').textContent = `最终结局数据 —— 疑心：${gameState.suspicion} | 人脉：${gameState.network}`;
+        ]
+    },
+    "D1_2_loyal": {
+        text: "王妃高烧不退，梦呓中呼唤着王爷的乳名。窗外月色惨白，药石无灵。",
+        actions: [
+            {
+                text: "【守夜】彻夜不眠，以冷水为王妃拭额",
+                effect: (gs) => {
+                    gs.network += 1;
+                    gs.flags.hasToken = true;
+                    recordChange("人脉", 1);
+                },
+                feedback: "天将明时，高热稍退。王妃醒来看见你充血的双眸，握住你的手，将一个冰凉坚硬的物件——她的玉簪，塞入你掌心。你感激涕零，但指尖触及温润玉石时，心底闪过一丝冰冷的清明：这不仅是赏赐，更是封口费。"
+            },
+            {
+                text: "【求药】冒险去军医处讨要风寒药",
+                requires: (gs) => gs.gold >= 5,
+                effect: (gs) => {
+                    gs.gold -= 5;
+                    gs.suspicion += 5;
+                    gs.network += 1;
+                    recordChange("银钱", -5);
+                    recordChange("疑心", 5);
+                    recordChange("人脉", 1);
+                },
+                feedback: "军医斜睨着你，丢来一包药粉。“五两银子。”你咬牙付钱。药或许有用，但这次交易让你在叛军眼里有了“价值”。"
+            }
+        ]
+    },
+    "D1_2_traitor": {
+        text: "叛将在灯下把玩着一枚玉佩，那是王妃的随身之物。“她说，这是王爷所赠。你说，我是该毁了它，还是……让它换个主人？”",
+        actions: [
+            {
+                text: "【献策】建议他留下，日后或可胁迫王妃",
+                requires: (gs) => gs.trust >= 3,
+                effect: (gs) => {
+                    gs.trust += 3;
+                    recordChange("信任", 3);
+                },
+                feedback: "“哦？你倒想得远。”他将玉佩抛给你，“那就由你保管。她若听话，这玉就还是她的。”你接住的，是一份沉重的“信任”。"
+            },
+            {
+                text: "【表忠】当即摔碎玉佩，以示决裂",
+                effect: (gs) => {
+                    gs.trust += 5;
+                    gs.suspicion += 5;
+                    // 早期死亡判定：疑心过高时，过度表忠显得虚伪
+                    if (gs.suspicion > 30) {
+                        gs._ending = "EARLY_OVERACT";
+                    }
+                    recordChange("信任", 5);
+                    recordChange("疑心", 5);
+                },
+                feedback: "玉碎之声清脆。叛将先是一愣，随即大笑。“够狠！我喜欢。”你赢得了赞赏，也彻底毁了回头路。"
+            }
+        ]
+    },
+
+    // ==================== DAY 2 ====================
+    "D2_0_loyal": {
+        text: "晨霜未化，寝宫外传来了急促的脚步声。叛将传令加强搜查，甚至连屏风后的杂物也要翻看。王妃将一封藏在发髻里的密信交给你，眼神中透着绝望的期许。",
+        actions: [
+            {
+                text: "【藏匿】将信缝入破旧的夹袄",
+                effect: (gs) => {
+                    gs.suspicion += 5;
+                    gs.network += 1;
+                    recordChange("疑心", 5);
+                    recordChange("人脉", 1);
+                },
+                feedback: "你躲在暗处飞快地飞针走线。信纸被汗水浸湿，却稳稳地藏在了棉絮深处。你告诉自己这是为了忠义，但另一个声音在问：若王爷败了，这封信会不会是新的投名状？"
+            },
+            {
+                text: "【贿赂】重金买通搜查的副将",
+                requires: (gs) => gs.gold >= 15 && gs.network >= 2,
+                effect: (gs) => {
+                    gs.gold -= 15;
+                    gs.suspicion = Math.max(0, gs.suspicion - 15);
+                    gs.network += 2;
+                    gs.flags.hasAid = true;
+                    // 早期死亡判定：无人脉基础时贸然行贿
+                    if (gs.network < 2) {
+                        gs._ending = "EARLY_BRIBE_FAIL";
+                    }
+                    recordChange("银钱", -15);
+                    recordChange("疑心", -15);
+                    recordChange("人脉", 2);
+                },
+                feedback: "你借着整理箱笼的机会，将一块沉甸甸的银锭塞进副将的护腕。他掂了掂重量，心领神会地挥手示意亲兵跳过这间屋子。"
+            }
+        ]
+    },
+    "D2_0_traitor": {
+        text: "叛将的耐心正在消磨，他看你的眼神越发冰冷。若想让他彻底相信你的价值，你必须为王妃准备一份“无可挽回”的离别礼。",
+        actions: [
+            {
+                text: "【寻刃】故意打碎官窑瓷瓶",
+                effect: (gs) => {
+                    gs.suspicion += 5;
+                    gs.trust += 2;
+                    gs.flags.hasWeapon = "blade";
+                    recordChange("疑心", 5);
+                    recordChange("信任", 2);
+                },
+                feedback: "你装作手滑，名贵的瓷瓶在地上炸裂。你趁乱捡起一枚最锋利的碎片藏入袖中。瓷片无名无号，恰如深宫怨念，无从查起。"
+            },
+            {
+                text: "【觅毒】从膳房窃取砒霜",
+                requires: (gs) => gs.gold >= 10,
+                effect: (gs) => {
+                    gs.gold -= 10;
+                    gs.suspicion += 8;
+                    gs.trust += 3;
+                    gs.flags.hasWeapon = "poison";
+                    recordChange("银钱", -10);
+                    recordChange("疑心", 8);
+                    recordChange("信任", 3);
+                },
+                feedback: "你以“房中老鼠惊扰娘娘”为由，获取一包白色的粉末。砒霜，天下剧毒，多来自军中或药库，其源可溯。"
+            }
+        ]
+    },
+    "D2_1_loyal": {
+        text: "叛将在花园内校场阅兵，看样子今日便要攻城。侧门处的守卫正在换岗，如果你能趁机混出去，或许能将信送达。",
+        actions: [
+            {
+                text: "【闯关】冒险出府传递密信",
+                requires: (gs) => gs.network >= 5,
+                effect: (gs) => {
+                    gs.suspicion += 20;
+                    gs.network -= 2;
+                    gs.flags.sentLetter = true;
+                    // 早期死亡判定：疑心过高时闯关是自投罗网
+                    if (gs.suspicion > 65) {
+                        gs._ending = "EARLY_CAUGHT";
+                    }
+                    recordChange("疑心", 20);
+                    recordChange("人脉", -2);
+                },
+                feedback: "你借着送浆洗衣服的机会，利用平日积攒的人情求马夫开了后门。信送出去了，但你回府时被亲兵盯了很久，呼吸声清晰可见。"
+            },
+            {
+                text: "【蛰伏】搜查太严，按兵不动",
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 5);
+                    recordChange("疑心", -5);
+                },
+                feedback: "你看着严密的封锁线，理智地退了回来。但你深知，这何尝不是在观望？你在等一个更明确的胜负信号，再押上全部的筹码。"
+            }
+        ]
+    },
+    "D2_1_traitor_poison": {
+        text: "佛堂内檀香袅袅，王妃正背对着你礼佛。你手中的茶碗还冒着热气，那包无色无味的砒霜已尽数没入汤中。",
+        actions: [
+            {
+                text: "【投毒】亲手服侍王妃饮下。",
+                requires: (gs) => gs.trust >= 5,
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 10);
+                    gs.trust += 5;
+                    gs.flags.princessDead = true;
+                    gs.flags.hasWeapon = null;
+                    recordChange("疑心", -10);
+                    recordChange("信任", 5);
+                },
+                feedback: "你柔声劝慰：“娘娘，早些喝了汤药吧。”她毫无防备饮下，沉沉睡去，但你知道，她不会再醒了。你立了首功，但在这府里，你再也没有回头路了。"
+            },
+            {
+                text: "【弃毒】在最后关头将汤药倒入花盆",
+                effect: (gs) => {
+                    gs.suspicion += 10;
+                    gs.trust -= 5;
+                    gs.flags.hasWeapon = null;
+                    recordChange("疑心", 10);
+                    recordChange("信任", -5);
+                },
+                feedback: "你手抖了，滚烫的茶水泼了一地。娘娘惊疑地看着你，而你深知，你错过了叛将给你的最后一次机会。"
+            }
+        ]
+    },
+    "D2_1_traitor_blade": {
+        text: "屏风后，你紧紧攥着那枚锋利的瓷片。王妃枯坐在佛像前，背影单薄得像一张纸。叛将的亲兵就在廊下，等着里面的动静。",
+        actions: [
+            {
+                text: "【递刃】贴耳诛心，诱导其割腕自尽。",
+                requires: (gs) => gs.trust >= 5,
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 10);
+                    gs.trust += 5;
+                    gs.flags.princessDead = true;
+                    gs.flags.hasWeapon = null;
+                    recordChange("疑心", -10);
+                    recordChange("信任", 5);
+                },
+                feedback: "你将瓷片塞入她手中，轻声说：“娘娘，自己动手总好过被侮辱失了名节。”鲜血瞬间染红了佛经，你拿到了登天的阶梯。"
+            },
+            {
+                text: "【收手】将瓷片藏入袖中，最终跪地不起",
+                requires: (gs) => gs.trust >= 5,
+                effect: (gs) => {
+                    gs.suspicion += 10;
+                    gs.trust -= 5;
+                    recordChange("疑心", 10);
+                    recordChange("信任", -5);
+                },
+                feedback: "你终究没敢递出那块碎片。你跪在地上泪流满面，娘娘叹了口气。你保住了人性，却丢了叛将的“倚重”。"
+            }
+        ]
+    },
+"D2_1_traitor_none": {
+    text: "你两手空空地站在王妃身后。你没钱买毒，也没胆弄刃。叛将的耐心已经到了极限。",
+    actions: [
+        {
+            text: "【认命】还是算了吧",
+            effect: (gs) => {
+                gs.suspicion += 30;
+                gs.trust -= 10;
+                gs._ending = "EARLY_USELESS";
+                recordChange("疑心", 30);
+                recordChange("信任", -10);
+            },
+            feedback: "你垂着头退了出去。当晚，叛将便下令处死了你这个'废物'。"
         }
+    ]
+},
+    "D2_2_loyal": {
+        text: "深夜的将军府死寂得可怕，只有远处隐约的更鼓声。王妃垂泪烛下，山雨欲来。",
+        actions: [
+            {
+                text: "【警惕】和衣而睡，防备暗算",
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 5);
+                    recordChange("疑心", -5);
+                },
+                feedback: "你坐在床边，手中似乎什么都抓不住。窗外任何风吹草动都让你惊醒，漫漫长夜，你不曾合眼。"
+            },
+            {
+                text: "【安置】利用余钱安抚同僚",
+                requires: (gs) => gs.gold >= 5,
+                effect: (gs) => {
+                    gs.gold -= 5;
+                    gs.network += 3;
+                    recordChange("银钱", -5);
+                    recordChange("人脉", 3);
+                },
+                feedback: "你将仅存的银子分给府中同样瑟瑟发抖的小丫鬟们。她们看你的眼神多了几分感激，这点香火情，或许就是明天的保命符。"
+            }
+        ]
+    },
+    "D2_2_traitor_success": {
+        text: "王妃的房间已经彻底安静。你站在叛将的书房外，他正在灯下看布防图。",
+        actions: [
+            {
+                text: "【复命】告知娘娘自尽之事",
+                effect: (gs) => {
+                    gs.trust += 5;
+                    gs.network = Math.max(0, gs.network - 10);
+                    recordChange("信任", 5);
+                    recordChange("人脉", -10);
+                },
+                feedback: "“她已死。”你低声说。叛将放下笔，审视了你很久，冷笑道：“你当真说到做到。”“将军可满意？”叛将不置可否。"
+            },
+            {
+                text: "【善后】抹除房内所有痕迹",
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 15);
+                    recordChange("疑心", -15);
+                },
+                feedback: "你回到王妃房内，烧掉了所有可能引起怀疑的纸条，擦净了桌上的药渍。明天，这里将是一场“名节大于天”的殉道悲剧。"
+            }
+        ]
+    },
+    "D2_2_traitor_fail": {
+        text: "叛将盯着你，刀尖已经在桌面上划出了刺耳的声响：“人呢？”",
+        actions: [
+            {
+                text: "【狡辩】谎称王妃还有利用价值。",
+                effect: (gs) => {
+                    gs.suspicion += 10;
+                    gs.trust -= 5;
+                    recordChange("疑心", 10);
+                    recordChange("信任", -5);
+                },
+                feedback: "“娘娘她……终究是娘娘，或许日后还有用得到的地方。”你强自辩解，只得到叛将的一声冷哼。"
+            },
+            {
+                text: "【请罪】跪地求饶",
+                effect: (gs) => {
+                    gs.suspicion += 25;
+                    gs.trust -= 10;
+                    recordChange("疑心", 25);
+                    recordChange("信任", -10);
+                },
+                feedback: "你看着叛将阴沉的脸，急忙跪地求饶：“求求将军饶了小的性命！”他只是挥了挥手：“滚，别再到我面前来。”"
+            }
+        ]
+    },
+
+    // ==================== DAY 3 ====================
+    "D3_0_loyal": {
+        text: "城外传来了第一声炮响，震碎了窗棂上的纸。叛军开始慌乱，那是王爷的援军。叛将提着带血的剑冲向寝宫，似乎要拉王妃做最后一搏。",
+        actions: [
+            {
+                text: "【舍命】用身体拦在寝宫门口",
+                requires: (gs) => gs.network >= 3,
+                effect: (gs) => {
+                    gs.suspicion += 10;
+                    gs.network += 5;
+                    recordChange("疑心", 10);
+                    recordChange("人脉", 5);
+                },
+                feedback: "你死死抱住叛将的大腿，被重重踢了一脚，口吐鲜血。剧痛与恐惧中，一股滔天的怨愤竟压过了忠勇：我凭什么要为了他们男人的江山霸业，赔上自己的性命？"
+            },
+            {
+                text: "【指路】引开叛将的注意力",
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 10);
+                    recordChange("疑心", -10);
+                },
+                feedback: "你指着侧门惊叫：“娘娘已经跑向水牢了！”叛将顾不得许多，提刀追了过去。你趁乱拉着王妃钻进了假山下的暗道。"
+            }
+        ]
+    },
+    "D3_0_traitor_dead": { // 王妃已死，信任高
+        text: "叛将被困在府内，神色狞戾。他看着王妃的尸身，似乎想起了什么，转头看向你：“昨夜，你确定她是自尽？”",
+        actions: [
+            {
+                text: "【固谎】将死因归结于绝望与王爷负心",
+                requires: (gs) => gs.trust >= 8,
+                effect: (gs) => {
+                    gs.trust += 5;
+                    recordChange("信任", 5);
+                },
+                feedback: "“娘娘是因王爷负心才心死，死前还在痛骂王爷。这难道不是将军的威严所致？”你冷静地圆谎，叛将紧绷的肩膀松了下来。"
+            },
+            {
+                text: "【装惧】表现出极度恐惧",
+                effect: (gs) => {
+                    gs.suspicion = Math.max(0, gs.suspicion - 10);
+                    recordChange("疑心", -10);
+                },
+                feedback: "你缩在角落瑟瑟发抖，一言不发。你的卑微和恐惧让他觉得你没有胆量杀人。他冷哼一声，转头部署防御。"
+            }
+        ]
+    },
+    "D3_0_traitor_alive": { // 王妃未死，或信任低
+        text: "城破在即，王妃已被你藏起或控制。但叛将见大势已去，看你的眼神充满了被背叛的疯狂。",
+        actions: [
+            {
+                text: "【挟持】以王妃为质，要求叛将放你出城",
+                requires: (gs) => !gs.flags.princessDead,
+                effect: (gs) => {
+                    gs.suspicion += 20;
+                    gs.trust -= 15;
+                    recordChange("疑心", 20);
+                    recordChange("信任", -15);
+                },
+                feedback: "你将刀架在王妃颈上，与叛将对峙。这是你最后的筹码。"
+            },
+            {
+                text: "【谢罪】跪地乞怜。",
+                effect: (gs) => {
+                    gs._ending = "TRAITOR_DOUBLE_FAIL";
+                },
+                feedback: "王妃指着你：“这婢女早已投贼。”王爷冷笑一声，叛将在死前也反咬一口。你算尽机关，最终两头落空。"
+            }
+        ]
+    },
+    "D3_1_loyal": {
+        text: "城门破了！王爷的玄甲铁骑踏碎了朱红的门槛。府内乱成一团，仆役们四散奔逃，叛将正要杀人灭口。",
+        actions: [
+            {
+                text: "【护主】带领家丁掩护娘娘出逃",
+                requires: (gs) => gs.network >= 8,
+                effect: (gs) => {
+                    gs.suspicion += 30;
+                    gs.network -= 5;
+                    gs.flags.princessSafe = true;
+                    recordChange("疑心", 30);
+                    recordChange("人脉", -5);
+                },
+                feedback: "几十名家丁自发聚在你身后，用棍棒抵挡叛军。你拉着王妃的手，穿过满是尸骸的院子。你们在铁骑到来前，看到了生的曙光。"
+            },
+            {
+                text: "【藏身】躲在枯井底等待搜救",
+                effect: (gs) => {
+                    gs.suspicion += 10;
+                    gs.flags.princessSafe = true;
+                    recordChange("疑心", 10);
+                },
+                feedback: "井底冰冷刺骨，你们听着头顶传来的惨叫和厮杀。当阳光再次透进井口，那是王爷的旗帜在飘扬。"
+            }
+        ]
+    },
+    "D3_1_traitor": {
+        text: "叛军大势已去，叛将自知必死，竟要拉你垫背。而你，早在选择那包砒霜或那片碎瓷时，就已为今日埋下了不同的种子。",
+        actions: [
+            {
+                text: "【反戈】栽赃通敌证据并大喊举报",
+                requires: (gs) => gs.trust >= 15,
+                effect: (gs) => {
+                    gs.trust += 10;
+                    gs.flags.generalDead = true;
+                    recordChange("信任", 10);
+                },
+                feedback: "你突然从怀里掏出伪造的信件丢在地上：“将军欲降贼，被娘娘发现才痛下杀手！”叛将被你这一吼弄懵了，王爷的副将一刀斩下了他的首级。",
+            },
+            {
+                text: "【自保】在混乱中刺向叛将",
+                requires: (gs) => gs.flags.hasWeapon === 'blade',
+                effect: (gs) => {
+                    gs.trust += 5;
+                    gs.flags.generalDead = true;
+                    recordChange("信任", 5);
+                },
+                feedback: "当叛将转身时，你将袖中的瓷片扎进了他的脖颈。他不可置信地看着你。你满身血迹地跪倒在王爷马前，哭声惊天动地。"
+            }
+        ]
+    },
+    "D3_2_loyal": {
+        text: "火光渐熄，王府满目疮痍。王爷在正厅接见幸存者。你看着王妃苍白但平安的面容，感到一切如梦一场。",
+        actions: [
+            {
+                text: "【请命】替娘娘陈述护主之情",
+                requires: (gs) => gs.network >= 5,
+                effect: (gs) => {
+                    gs._ending = "LOYAL_VICTORY";
+                },
+                feedback: "你跪在堂下，将三日来的惊险娓娓道来。王妃握着你的手，向王爷求了一份赦书。从此，你不再是那个卑微的婢女。"
+            },
+            {
+                text: "【隐退】在王爷进城前自行逃离",
+                effect: (gs) => {
+                    gs._ending = "LOYAL_SURVIVE";
+                },
+                feedback: "你没有等待赏赐，而是趁乱从后墙翻出。带着一点银两和一身自由，你消失在茫茫夜色中。乱世活下来，已是最大的赢。"
+            },
+            {
+                text: "【求权】不求金银，但求长随娘娘左右效力",
+                requires: (gs) => gs.network >= 8 && gs.flags.hasToken && !gs.flags.sentLetter,
+                effect: (gs) => {
+                    gs._ending = "LOYAL_SHADOW";
+                },
+                feedback: "你伏地，声音清晰：“奴婢不敢求金银外物。只求娘娘许奴婢一个内院管事的微职，长侍左右，为您看守门户。”王妃的眼神骤然深邃。她听懂了。你要的不是赏赐，而是一份权力。\n\n【结局 · 暗影共生】"
+            }
+        ]
+    },
+    "D3_2_traitor": {
+        text: "朱红的大门内，王爷高坐主位。王妃的尸身已入殓，而叛将的首级悬于梁下。所有人都在等待那个“忠仆”的证词。",
+        actions: [
+            {
+                text: "【上位】以死谏之名陈述“忠诚”",
+                requires: (gs) => gs.flags.princessDead && gs.flags.generalDead,
+                effect: (gs) => {
+                    gs._ending = "TRAITOR_PERFECT";
+                },
+                feedback: "你浑身血迹，满脸泪痕地交出“遗书”。既然叛将已死，没人知道真相。王爷扶起你，看着你那双写满“破碎与坚毅”的眼。这床榻，你上得理所应当。"
+            },
+            {
+                text: "【勒索】利用秘密要挟幸存的副将",
+                requires: (gs) => gs.trust >= 15,
+                effect: (gs) => {
+                    gs._ending = "TRAITOR_SHADOW";
+                },
+                feedback: "你并没有直接出头，而是握着副将通敌的把柄，让他成了你的提线木偶。王爷封了副将，而你是副将背后的操盘手。幕后，才是真正的阶梯。"
+            },
+            {
+                text: "【隐匿】将过往秘密沉入井底",
+                requires: (gs) => gs.suspicion < 50,
+                effect: (gs) => {
+                    gs._ending = "TRAITOR_SURVIVE";
+                },
+                feedback: "你烧掉所有证据，在王爷面前表现得像一个被吓傻的普通婢女。乱世求生，你选择了最安全却也最卑微的方式离开。"
+            }
+        ]
+    },
+
+    // ==================== 结局场景 ====================
+    "ENDING_EARLY": {
+        text: "",
+        actions: []
+    }
+};
+
+// ============ 结局文案库 ============
+const endingTexts = {
+    // 早期死亡
+    "EARLY_BETRAYED": {
+        title: "【殒·出师未捷】",
+        text: "“巧言令色！”叛将根本不信你的说辞，认为这是拙劣的刺探。他手起刀落，你成了他立威的第一个祭品。"
+    },
+    "EARLY_OVERACT": {
+        title: "【殒·画蛇添足】",
+        text: "“演技太过。”叛将冷冷道。他认为你过于急于表现，反而不可信。亲兵将你拖出，就地处置。"
+    },
+    "EARLY_BRIBE_FAIL": {
+        title: "【殒·弄巧成拙】",
+        text: "副将脸色一沉：“敢戏弄我？”他高声喝令将你拿下，以“行贿刺探军情”为由，当场杖毙。"
+    },
+    "EARLY_CAUGHT": {
+        title: "【殒·自投罗网】",
+        text: "你刚靠近侧门，暗处伏兵尽出。叛将早已布下天罗地网，你被当作传递消息的奸细，乱箭射杀。"
+    },
+
+"EARLY_USELESS": {
+    title: "【殒·弃子】",
+    text: "叛将要的是能用的刀，而你什么都没做成。他毫不留情地抛弃了你。"
+},  // ← 这个逗号很重要
+"BEATEN": {
+    title: "【殒·命丧乱杖】",
+    text: "疑心终过界，叛将不再听你分辩。你被拖至雪地，在乱杖下化为一滩肉泥。"
+},
+
+    // 忠诚线结局
+    "LOYAL_VICTORY": {
+        title: "【胜·暗流之主】",
+        text: "大军入城，副将倒戈！你赢得了这场三日豪赌，从此主宰了自己的命运。王妃亲自为你正名：“她是我最信任的人。”"
+    },
+    "LOYAL_SURVIVE": {
+        title: "【存·乱世余生】",
+        text: "你带着王妃逃走了。虽无名利，但生命已是最好的赏赐。乱世求生，能活下来便已不易。"
+    },
+    "LOYAL_SHADOW": {
+        title: "【隐·暗影共生】",
+        text: "你没有走向台前，而是隐入帷幕之后。恩情与秘密交织，你成了王妃最敏锐的耳目与暗刃。这才是深宫之中，真正的立足。"
+    },
+    // 野心线结局
+    "TRAITOR_PERFECT": {
+        title: "【极·逆天改命】",
+        text: "双枭皆亡，你巧舌如簧。王爷扶起你，看向你那双写满‘破碎与坚毅’的眼。从婢女到权臣，仅此三日。"
+    },
+    "TRAITOR_BETRAYED": {
+        title: "【殒·兔死狗烹】",
+        text: "叛将杀人灭口。你帮他除掉筹码，他反手便将你送上断头台以平民愤。你终于明白，棋子永远只是棋子。"
+    },
+    "TRAITOR_SHADOW": {
+        title: "【藏·幕后操盘】",
+        text: "真正的权力，从不需要站在光下。你掌握了更危险、也更牢固的力量。"
+    },
+    "TRAITOR_SURVIVE": {
+        title: "【存·乱世余生】",
+        text: "你放弃了波澜壮阔，选择了安全余生。乱世中，这何尝不是一种智慧。"
+    },
+    "TRAITOR_DOUBLE_FAIL": {
+        title: "【殒·两头落空】",
+        text: "王妃指着你：“这婢女早已投贼。”王爷冷笑一声，叛将在死前也反咬一口。你算尽机关，最终两头落空。"
+    },
+    "TRAITOR_FAILED": {
+        title: "【殒·野心未成】",
+        text: "你的计划破产了。王爷破城，叛将被擒，而你也被当作同党处决。野心与能力不匹配，便是取死之道。"
+    },
+    "DEFAULT": {
+        title: "【殒·功败垂成】",
+        text: "你的努力还是不够。城破之际，你死在混乱之中。这盘棋，你终究没有下赢。"
+    }
+};
+
+// ============ 游戏引擎函数 ============
+function showPrologue() {
+    document.getElementById('titleScreen').classList.remove('active');
+    document.getElementById('prologueScreen').classList.add('active');
+}
+function startGame() {
+    gameState = JSON.parse(JSON.stringify(initialState));
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('gameScreen').classList.add('active');
+    document.getElementById('chronicleEntries').innerHTML = '';
+    document.getElementById('actionsContainer').innerHTML = '';  // ← 加这一行！清空旧按钮
+    loadScene();
+}
+
+function backToTitle() { location.reload(); } // 直接刷新页面最保险
+
+function getSceneKey() {
+    const { day, period, identity, flags } = gameState;
+    // 处理结局场景
+    if (gameState._ending) return `ENDING_${gameState._ending}`;
+
+    // 标准场景键名
+    let key = `D${day}_${period}`;
+    if (identity) key += `_${identity}`;
+    else key += '_null';
+
+    // --- 处理特殊分支场景 ---
+    // D2 午后野心线，根据武器类型进入不同分支
+    if (day === 2 && period === 1 && identity === 'traitor') {
+        if (flags.hasWeapon === 'poison') key += '_poison';
+        else if (flags.hasWeapon === 'blade') key += '_blade';
+        else key += '_none';
+    }
+    // D2 深夜野心线，根据任务成功/失败进入不同分支
+    if (day === 2 && period === 2 && identity === 'traitor') {
+        if (flags.princessDead) key += '_success';
+        else key += '_fail';
+    }
+    // D3 清晨野心线，根据王妃生死进入不同分支
+    if (day === 3 && period === 0 && identity === 'traitor') {
+        if (flags.princessDead) key += '_dead';
+        else key += '_alive';
+    }
+
+    return key;
+}
+
+function loadScene() {
+
+    // 1. 检查并处理即时结局...
+    // 1. 检查并处理即时结局（如疑心过高）
+    const immediateEnding = checkImmediateEnding();
+    if (immediateEnding) {
+        showEnding(immediateEnding);
+        return;
+    }
+
+    const sceneKey = getSceneKey();
+    const scene = sceneDatabase[sceneKey];
+
+    // 如果找不到场景，使用默认保底场景
+    if (!scene) {
+        console.warn("未找到场景:", sceneKey);
+        const fallbackScene = {
+            text: `【第${gameState.day}天·${getPeriodName()}】\n\n局势紧张，你选择暂避风头。`,
+            actions: [{
+                text: "【蛰伏】静观其变",
+                effect: (gs) => { gs.suspicion = Math.max(0, gs.suspicion - 2); recordChange("疑心", -2); },
+                feedback: "你选择暂不出手。"
+            }]
+        };
+        renderScene(fallbackScene);
+        return;
+    }
+
+    renderScene(scene);
+}
+
+function renderScene(scene) {
+    // 渲染标题和文本内容
+    document.getElementById('sceneTitle').textContent = `第${gameState.day}天 · ${getPeriodName()}`;
+    document.getElementById('sceneText').textContent = scene.text;
+
+    const container = document.getElementById('actionsContainer');
+    container.innerHTML = '';
+
+    // 遍历生成按钮
+    scene.actions.forEach(action => {
+        // --- 核心：如果不满足 requires 条件，直接跳过不显示这个按钮 ---
+        if (action.requires && !action.requires(gameState)) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'action-btn';
+        btn.textContent = action.text;
+        
+        btn.onclick = () => {
+            pendingChanges = {};
+            if (action.effect) action.effect(gameState);
+            // 如果有结果文字就显示在下方，没有就直接跳时间
+            if (action.feedback) showFeedback(action.text, action.feedback);
+            else nextPeriod();
+        };
+        container.appendChild(btn);
+    });
+    updateDisplay();
+} 
+
+function updateDisplay() {
+    // 更新顶部数值
+    document.getElementById('suspicionValue').textContent = gameState.suspicion;
+    document.getElementById('suspicionBar').style.width = gameState.suspicion + '%';
+    document.getElementById('goldValue').textContent = gameState.gold;
+    document.getElementById('identityValue').textContent = gameState.identity === 'loyal' ? '忠诚' : (gameState.identity === 'traitor' ? '野心' : '未定');
+
+    // --- 数值警报：当疑心 >= 70 时，数值变红且框体变红 ---
+    const suspBox = document.getElementById('suspicionValue').parentElement;
+    if (gameState.suspicion >= 70) {
+        document.getElementById('suspicionValue').style.color = "red";
+        suspBox.style.border = "2px solid red"; 
+    } else {
+        document.getElementById('suspicionValue').style.color = "#5d432c";
+        suspBox.style.border = "1px solid #dcd3bc";
+    }
+
+    // 更新第二属性（人脉/信任）
+    const secondBox = document.getElementById('secondStatBox');
+    if (gameState.identity === 'traitor') {
+        secondBox.querySelector('.stat-label').textContent = '叛将信任';
+        document.getElementById('secondValue').textContent = gameState.trust;
+        document.getElementById('secondBar').className = 'stat-fill trust-fill';
+        document.getElementById('secondBar').style.width = (gameState.trust * 5) + '%';
+    } else {
+        secondBox.querySelector('.stat-label').textContent = '暗流人脉';
+        document.getElementById('secondValue').textContent = gameState.network;
+        document.getElementById('secondBar').className = 'stat-fill network-fill';
+        document.getElementById('secondBar').style.width = (gameState.network * 10) + '%';
+    }
+}
+
+function getPeriodName() {
+    return ['清晨', '午后', '深夜'][gameState.period];
+}
+
+function recordChange(attr, value) {
+    if (typeof value === 'number') {
+        pendingChanges[attr] = (pendingChanges[attr] || 0) + value;
+    } else {
+        pendingChanges[attr] = value;
+    }
+}
+
+function showFeedback(title, text) {
+    // 1. 获取文字区域，把反馈文字直接接在剧情后面
+    const sceneTextDiv = document.getElementById('sceneText');
+    sceneTextDiv.innerHTML += `<br><br><div style="color:#a0522d; padding:15px; background:rgba(139,115,85,0.05); border-left:4px solid #a0522d; font-style:italic;">${text}</div>`;
+    
+    // 2. 显示涨跌了多少数值，加在反馈文字下面
+    let changesHtml = '<div style="margin-top:10px; text-align:center; font-weight:bold;">';
+    for (let [key, value] of Object.entries(pendingChanges)) {
+        const color = (typeof value === 'number' && value > 0) ? '#8b0000' : '#228b22';
+        const sign = value > 0 ? '+' : '';
+        changesHtml += `<span style="margin:0 10px; color:${color}">${key} ${sign}${value}</span>`;
+    }
+    changesHtml += '</div>';
+    sceneTextDiv.innerHTML += changesHtml;
+
+    // 3. 删掉原来所有选项按钮，换成一个唯一的“继续”按钮
+    const container = document.getElementById('actionsContainer');
+    container.innerHTML = `<button class="btn" style="width:100%; background:#5d432c;" onclick="nextPeriod()">步入下一刻 (推进剧情)</button>`;
+    
+    // 4. 更新日志和顶部显示
+    addChronicle(title, text);
+    updateDisplay();
+}
+
+
+function closeFeedback() {
+    document.getElementById('feedbackOverlay').classList.remove('active');
+	updateDisplay();  // ← 加这一行！
+    nextPeriod();
+}
+
+function addChronicle(title, text) {
+    const entry = document.createElement('div');
+    entry.className = 'chronicle-entry';
+    entry.innerHTML = `<strong>${title}</strong><br>${text.split('\n')[0]}...`;
+    document.getElementById('chronicleEntries').prepend(entry);
+}
+
+function nextPeriod() {
+    // 先检查是否有触发的结局（如早期死亡标记）
+    const ending = checkImmediateEnding();
+    if (ending) {
+        showEnding(ending);
+        return;
+    }
+
+    // 随时间自动增长的疑心（模拟局势紧张）
+    const growth = gameState.day === 1 ? 2 : (gameState.day === 2 ? 3 : 4);
+    gameState.suspicion += growth;
+
+    // 推进时间
+    gameState.period++;
+    if (gameState.period > 2) {
+        gameState.period = 0;
+        gameState.day++;
+    }
+
+    // 检查是否到达最终结算日
+    if (gameState.day > 3) {
+        const finalEnding = calculateFinalEnding();
+        showEnding(finalEnding);
+        return;
+    }
+
+    loadScene();
+}
+
+function checkImmediateEnding() {
+    const g = gameState;
+    // 1. 疑心过高
+    if (g.suspicion >= 90) return "BEATEN";
+    // 2. 早期死亡标记
+    if (g._ending && g._ending.startsWith("EARLY_")) return g._ending;
+    // 3. 野心线在D3被直接清算
+    if (g._ending === "TRAITOR_DOUBLE_FAIL") return g._ending;
+    return null;
+}
+
+function calculateFinalEnding() {
+    const g = gameState;
+    if (g.identity === "loyal") {
+        if (g.network >= 8 && g.flags.hasToken && !g.flags.sentLetter) return "LOYAL_SHADOW";
+        if (g.flags.princessSafe && g.network >= 5) return "LOYAL_VICTORY";
+        if (g.suspicion < 90) return "LOYAL_SURVIVE";
+        return "DEFAULT";
+    } else if (g.identity === "traitor") {
+        if (g.flags.princessDead && g.flags.generalDead && g.trust >= 15) return "TRAITOR_PERFECT";
+        if (g.flags.princessDead && !g.flags.generalDead) return "TRAITOR_BETRAYED";
+        if (g.trust >= 15) return "TRAITOR_SHADOW";
+        if (g.suspicion < 50) return "TRAITOR_SURVIVE";
+        return "TRAITOR_FAILED";
+    }
+    return "DEFAULT";
+}
+
+function showEnding(endingId) {
+// === 就是这一行！只要进入结局，就给玩家发个“通关证” ===
+    localStorage.setItem('gameCleared', 'true');   
+ const ending = endingTexts[endingId] || endingTexts["DEFAULT"];
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('endingScreen').classList.add('active');
+    document.getElementById('endingTitle').textContent = ending.title;
+    document.getElementById('endingText').textContent = ending.text;
+
+    // 显示最终数据
+    const statsText = `最终数据 —— 疑心：${gameState.suspicion} | ${gameState.identity === 'loyal' ? '人脉' : '信任'}：${gameState.identity === 'loyal' ? gameState.network : gameState.trust} | 银钱：${gameState.gold}`;
+    document.getElementById('endingStats').textContent = statsText;
+}
+
+// ============ 初始化 ============
+// 页面加载完成后，无需额外操作，点击按钮即可开始游戏
     </script>
 </body>
 </html>
